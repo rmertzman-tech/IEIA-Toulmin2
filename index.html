@@ -2311,6 +2311,10 @@ Educational use permitted. Attribution required.
             });
             const [personalAssessment, setPersonalAssessment] = useState({});
             const [showBiologicalAnalogue, setShowBiologicalAnalogue] = useState(false);
+            
+            // Use refs to avoid React re-render fighting with typing
+            const claimRef = useRef(null);
+            const warrantRef = useRef(null);
 
             const phases = [
                 {
@@ -2669,22 +2673,37 @@ Educational use permitted. Attribution required.
                                     psychological well-being"
                                 </p>
                                 <textarea
+                                    ref={claimRef}
                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
                                     rows="3"
                                     placeholder="Write Meta's implicit ethical claim here..."
-                                    value={toulminConstruction.claim}
-                                    onChange={(e) => setToulminConstruction({...toulminConstruction, claim: e.target.value})}
-                                    onKeyDown={(e) => e.stopPropagation()}
-                                    onKeyPress={(e) => e.stopPropagation()}
-                                    onKeyUp={(e) => e.stopPropagation()}
+                                    defaultValue={toulminConstruction.claim}
+                                    onBlur={(e) => {
+                                        setToulminConstruction({...toulminConstruction, claim: e.target.value});
+                                    }}
+                                    onInput={(e) => {
+                                        // Update character count live without re-rendering the input
+                                        const charCount = e.target.value.length;
+                                        const counterEl = document.getElementById('claim-char-count');
+                                        if (counterEl) {
+                                            counterEl.textContent = `Write at least 20 characters to unlock the next sections (${charCount}/20)`;
+                                            if (charCount > 20) {
+                                                counterEl.style.display = 'none';
+                                            } else {
+                                                counterEl.style.display = 'block';
+                                            }
+                                        }
+                                        // Also update the state so showAdditionalFields works
+                                        if (charCount > 20 !== toulminConstruction.claim.length > 20) {
+                                            setToulminConstruction({...toulminConstruction, claim: e.target.value});
+                                        }
+                                    }}
                                     autoComplete="off"
                                     spellCheck="true"
                                 />
-                                {!showAdditionalFields && (
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        Write at least 20 characters to unlock the next sections ({toulminConstruction.claim.length}/20)
-                                    </p>
-                                )}
+                                <p id="claim-char-count" className="text-xs text-gray-500 mt-2" style={{ display: toulminConstruction.claim.length <= 20 ? 'block' : 'none' }}>
+                                    Write at least 20 characters to unlock the next sections ({toulminConstruction.claim.length}/20)
+                                </p>
                             </div>
 
                             {/* Always render but control visibility */}
@@ -2725,14 +2744,14 @@ Educational use permitted. Attribution required.
                                         What principle or reasoning links the evidence to the conclusion?
                                     </p>
                                     <textarea
+                                        ref={warrantRef}
                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none"
                                         rows="3"
                                         placeholder="Example: 'If users voluntarily choose to use a platform, then the platform bears no responsibility for harms...'"
-                                        value={toulminConstruction.warrant}
-                                        onChange={(e) => setToulminConstruction({...toulminConstruction, warrant: e.target.value})}
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        onKeyPress={(e) => e.stopPropagation()}
-                                        onKeyUp={(e) => e.stopPropagation()}
+                                        defaultValue={toulminConstruction.warrant}
+                                        onBlur={(e) => {
+                                            setToulminConstruction({...toulminConstruction, warrant: e.target.value});
+                                        }}
                                         autoComplete="off"
                                         spellCheck="true"
                                     />
