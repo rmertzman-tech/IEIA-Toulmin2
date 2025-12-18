@@ -2674,20 +2674,21 @@ Educational use permitted. Attribution required.
                                     placeholder="Write Meta's implicit ethical claim here..."
                                     value={toulminConstruction.claim}
                                     onChange={(e) => setToulminConstruction({...toulminConstruction, claim: e.target.value})}
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    onKeyPress={(e) => e.stopPropagation()}
+                                    onKeyUp={(e) => e.stopPropagation()}
+                                    autoComplete="off"
+                                    spellCheck="true"
                                 />
                                 {!showAdditionalFields && (
                                     <p className="text-xs text-gray-500 mt-2">
-                                        Write at least 20 characters to unlock the next sections
+                                        Write at least 20 characters to unlock the next sections ({toulminConstruction.claim.length}/20)
                                     </p>
                                 )}
                             </div>
 
-                            {/* Always render but control visibility with opacity and pointer-events */}
-                            <div style={{ 
-                                opacity: showAdditionalFields ? 1 : 0.3,
-                                pointerEvents: showAdditionalFields ? 'auto' : 'none',
-                                transition: 'opacity 0.3s ease'
-                            }}>
+                            {/* Always render but control visibility */}
+                            <div className={showAdditionalFields ? '' : 'opacity-30 pointer-events-none'}>
                                 <div className="bg-white border-2 border-green-300 rounded-lg p-6">
                                     <h4 className="font-bold text-green-900 mb-3">🔍 GROUNDS: What evidence supports this claim?</h4>
                                     <p className="text-sm text-gray-600 mb-3">
@@ -2729,6 +2730,11 @@ Educational use permitted. Attribution required.
                                         placeholder="Example: 'If users voluntarily choose to use a platform, then the platform bears no responsibility for harms...'"
                                         value={toulminConstruction.warrant}
                                         onChange={(e) => setToulminConstruction({...toulminConstruction, warrant: e.target.value})}
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                        onKeyPress={(e) => e.stopPropagation()}
+                                        onKeyUp={(e) => e.stopPropagation()}
+                                        autoComplete="off"
+                                        spellCheck="true"
                                     />
                                 </div>
 
@@ -3684,143 +3690,95 @@ Educational use permitted. Attribution required.
         }
 
         // ARGUMENT ANALYSIS SECTION
-       function ArgumentAnalysisSection({ philosophers, onComplete, onNext }) {
-    const [selectedPhil, setSelectedPhil] = useState(null);
+        function ArgumentAnalysisSection({ philosophers, onComplete, onNext }) {
+            const [selectedPhil, setSelectedPhil] = useState(null);
+            const philosopherList = Object.keys(philosophers);
 
-    // ✅ NEW: stable local state for student input
-    const [responses, setResponses] = useState({
-        claim: "",
-        grounds: "",
-        warrant: "",
-        backing: "",
-        qualifier: "",
-        rebuttal: ""
-    });
+            if (selectedPhil) {
+                const phil = philosophers[selectedPhil];
+                const arg = phil.toulminArguments[0];
 
-    const philosopherList = Object.keys(philosophers);
+                return (
+                    <div className="bg-white rounded-lg shadow-lg p-8">
+                        <button
+                            onClick={() => setSelectedPhil(null)}
+                            className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+                        >
+                            ← Back to All
+                        </button>
 
-    const handleChange = (field) => (e) => {
-        setResponses(prev => ({
-            ...prev,
-            [field]: e.target.value
-        }));
-    };
-
-    if (selectedPhil) {
-        const phil = philosophers[selectedPhil];
-        const arg = phil.toulminArguments[0];
-
-        return (
-            <div className="bg-white rounded-lg shadow-lg p-8">
-                <button
-                    onClick={() => setSelectedPhil(null)}
-                    className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
-                >
-                    ← Back to All
-                </button>
-
-                <div className="flex items-center space-x-4 mb-6">
-                    <div className="text-6xl">{phil.image}</div>
-                    <div>
-                        <h2 className="text-3xl font-bold text-gray-900">{phil.name}</h2>
-                        <p className="text-lg text-gray-600">Toulmin Argument</p>
-                    </div>
-                </div>
-
-                {/* Instructor Argument */}
-                <div className="space-y-6 mb-10">
-                    <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-6">
-                        <h3 className="text-xl font-bold text-blue-900 mb-2">📍 CLAIM</h3>
-                        <p className="text-gray-800 font-semibold">{arg.claim}</p>
-                    </div>
-
-                    <div className="bg-green-50 border-2 border-green-300 rounded-lg p-6">
-                        <h3 className="text-xl font-bold text-green-900 mb-3">🔍 GROUNDS</h3>
-                        <ul className="space-y-2">
-                            {arg.grounds.map((ground, i) => (
-                                <li key={i} className="text-gray-700">• {ground}</li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-6">
-                        <h3 className="text-xl font-bold text-purple-900 mb-3">🔗 WARRANT</h3>
-                        <p className="text-gray-800">{arg.warrant}</p>
-                    </div>
-                </div>
-
-                {/* ✅ NEW: Student Analysis Section */}
-                <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-6 space-y-4">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                        ✍️ Your Toulmin Analysis
-                    </h3>
-
-                    {[
-                        ["claim", "Your reconstructed claim"],
-                        ["grounds", "Your supporting grounds"],
-                        ["warrant", "Underlying warrant"],
-                        ["backing", "Backing for the warrant"],
-                        ["qualifier", "Qualifier (usually, probably, unless…)"],
-                        ["rebuttal", "Potential rebuttal or exception"]
-                    ].map(([key, label]) => (
-                        <div key={key}>
-                            <label className="block font-semibold text-gray-700 mb-1">
-                                {label}
-                            </label>
-                            <textarea
-                                value={responses[key]}
-                                onChange={handleChange(key)}
-                                rows={3}
-                                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-400"
-                                placeholder={`Enter ${label.toLowerCase()}...`}
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                <button
-                    onClick={() => setSelectedPhil(null)}
-                    className="mt-6 w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
-                >
-                    View Another
-                </button>
-            </div>
-        );
-    }
-
-    return (
-        <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Argument Analysis</h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {philosopherList.map(philKey => {
-                    const phil = philosophers[philKey];
-                    return (
-                        <div key={philKey} className="border-2 border-gray-300 rounded-lg p-6">
-                            <div className="text-center mb-4">
-                                <div className="text-5xl mb-3">{phil.image}</div>
-                                <h3 className="text-xl font-bold">{phil.name}</h3>
+                        <div className="flex items-center space-x-4 mb-6">
+                            <div className="text-6xl">{phil.image}</div>
+                            <div>
+                                <h2 className="text-3xl font-bold text-gray-900">{phil.name}</h2>
+                                <p className="text-lg text-gray-600">Toulmin Argument</p>
                             </div>
-                            <button
-                                onClick={() => setSelectedPhil(philKey)}
-                                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
-                            >
-                                View Argument
-                            </button>
                         </div>
-                    );
-                })}
-            </div>
 
-            <button
-                onClick={() => { onComplete(); onNext(); }}
-                className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
-            >
-                Continue to Synthesis →
-            </button>
-        </div>
-    );
-}
+                        <div className="space-y-6">
+                            <div className="bg-blue-50 border-2 border-blue-400 rounded-lg p-6">
+                                <h3 className="text-xl font-bold text-blue-900 mb-2">📍 CLAIM</h3>
+                                <p className="text-gray-800 font-semibold">{arg.claim}</p>
+                            </div>
+
+                            <div className="bg-green-50 border-2 border-green-300 rounded-lg p-6">
+                                <h3 className="text-xl font-bold text-green-900 mb-3">🔍 GROUNDS</h3>
+                                <ul className="space-y-2">
+                                    {arg.grounds.map((ground, i) => (
+                                        <li key={i} className="text-gray-700">• {ground}</li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-6">
+                                <h3 className="text-xl font-bold text-purple-900 mb-3">🔗 WARRANT</h3>
+                                <p className="text-gray-800">{arg.warrant}</p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setSelectedPhil(null)}
+                            className="mt-6 w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
+                        >
+                            View Another
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="bg-white rounded-lg shadow-lg p-8">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Argument Analysis</h2>
+                    
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {philosopherList.map(philKey => {
+                            const phil = philosophers[philKey];
+                            return (
+                                <div key={philKey} className="border-2 border-gray-300 rounded-lg p-6">
+                                    <div className="text-center mb-4">
+                                        <div className="text-5xl mb-3">{phil.image}</div>
+                                        <h3 className="text-xl font-bold">{phil.name}</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedPhil(philKey)}
+                                        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
+                                    >
+                                        View Argument
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <button
+                        onClick={() => { onComplete(); onNext(); }}
+                        className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
+                    >
+                        Continue to Synthesis →
+                    </button>
+                </div>
+            );
+        }
 
         // SYNTHESIS SECTION
         function SynthesisSection({ studentInfo, sessionData, onComplete }) {
